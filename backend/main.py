@@ -16,6 +16,31 @@ app.add_middleware(
 def read_root():
     return {"status": "AI Code Debugger Backend Running"}
 
+# ---- SIMPLE AI EXPLANATION ENGINE (MOCK FOR NOW) ----
+def explain_bug(bug, code):
+    explanations = {
+        "Hardcoded Password": {
+            "explanation": "Hardcoding passwords is insecure because anyone who gets access to the code can see sensitive credentials.",
+            "fix": "Use environment variables or a secure secrets manager instead of hardcoding passwords."
+        },
+        "Debug Statement": {
+            "explanation": "Debug statements can expose internal data and reduce performance in production.",
+            "fix": "Remove debug logs or use a proper logging library with log levels."
+        },
+        "Long Line": {
+            "explanation": "Long lines make code hard to read and maintain.",
+            "fix": "Break the line into smaller, readable parts or refactor the logic."
+        }
+    }
+
+    return explanations.get(
+        bug["title"],
+        {
+            "explanation": "This issue may cause maintainability or security problems.",
+            "fix": "Follow best coding practices to resolve this issue."
+        }
+    )
+
 # Analyze code endpoint
 @app.post("/analyze")
 async def analyze_code(file: UploadFile = File(...)):
@@ -26,28 +51,46 @@ async def analyze_code(file: UploadFile = File(...)):
 
     # Rule 1: Hardcoded password
     if "password" in code.lower():
-        bugs.append({
+        bug = {
             "title": "Hardcoded Password",
             "description": "Sensitive keyword 'password' found in code",
             "severity": "high"
-        })
+        }
+
+        ai = explain_bug(bug, code)
+        bug["ai_explanation"] = ai["explanation"]
+        bug["ai_fix"] = ai["fix"]
+
+        bugs.append(bug)
 
     # Rule 2: Console log
     if "console.log" in code:
-        bugs.append({
+        bug = {
             "title": "Debug Statement",
             "description": "console.log found remove before production",
             "severity": "low"
-        })
+        }
+
+        ai = explain_bug(bug, code)
+        bug["ai_explanation"] = ai["explanation"]
+        bug["ai_fix"] = ai["fix"]
+
+        bugs.append(bug)
 
     # Rule 3: Long lines
     for line in code.splitlines():
         if len(line) > 120:
-            bugs.append({
+            bug = {
                 "title": "Long Line",
                 "description": "Line exceeds 120 characters",
                 "severity": "medium"
-            })
+            }
+
+            ai = explain_bug(bug, code)
+            bug["ai_explanation"] = ai["explanation"]
+            bug["ai_fix"] = ai["fix"]
+
+            bugs.append(bug)
             break
 
     response = {
@@ -59,4 +102,5 @@ async def analyze_code(file: UploadFile = File(...)):
     }
 
     return response
+
 
