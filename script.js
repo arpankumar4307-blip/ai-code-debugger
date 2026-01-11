@@ -27,7 +27,7 @@ async function runAnalysis() {
   formData.append("file", file);
 
   try {
-    const response = await fetch("http://127.0.0.1:8000/analyze", {
+    const response = await fetch("https://friendly-space-memory-q7jxq5xg6w9p3xq5w-8000.app.github.dev/", {
       method: "POST",
       body: formData
     });
