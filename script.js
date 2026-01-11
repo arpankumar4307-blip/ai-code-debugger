@@ -1,4 +1,3 @@
-// Get elements
 const analyzeBtn = document.getElementById("analyzeBtn");
 const fileInput = document.getElementById("codeFile");
 
@@ -9,42 +8,33 @@ const performanceCount = document.getElementById("performanceCount");
 
 const bugList = document.getElementById("bugList");
 
-// Button click
 analyzeBtn.addEventListener("click", async () => {
   if (!fileInput.files.length) {
-    alert("Please upload a file first");
+    alert("Please select a file first");
     return;
   }
 
-  await runAnalysis();
-});
-
-// REAL analysis function
-async function runAnalysis() {
-  const file = fileInput.files[0];
-
   const formData = new FormData();
-  formData.append("file", file);
+  formData.append("file", fileInput.files[0]);
 
   try {
-    const response = await fetch("https://friendly-space-memory-q7jxq5xg6w9p3xq5w-8000.app.github.dev/", {
-      method: "POST",
-      body: formData
-    });
-
-    if (!response.ok) {
-      throw new Error("Backend error");
-    }
+    const response = await fetch(
+      "https://friendly-space-memory-q7jxq5xg6w9p3xq5w-8000.app.github.dev/analyze",
+      {
+        method: "POST",
+        body: formData
+      }
+    );
 
     const data = await response.json();
 
-    // Update dashboard numbers
+    // Update summary
     filesCount.textContent = data.files;
     bugsCount.textContent = data.bugCount;
     securityCount.textContent = data.securityCount;
     performanceCount.textContent = data.performanceCount;
 
-    // Render bugs
+    // Clear previous bugs
     bugList.innerHTML = "";
 
     if (data.bugs.length === 0) {
@@ -53,20 +43,19 @@ async function runAnalysis() {
     }
 
     data.bugs.forEach(bug => {
-      const bugItem = document.createElement("article");
-      bugItem.classList.add(bug.severity);
-
-      bugItem.innerHTML = `
+      const div = document.createElement("div");
+      div.innerHTML = `
         <h3>${bug.title}</h3>
         <p>${bug.description}</p>
+        <p><b>AI Explanation:</b> ${bug.ai_explanation}</p>
+        <p><b>Suggested Fix:</b> ${bug.ai_fix}</p>
+        <hr>
       `;
-
-      bugList.appendChild(bugItem);
+      bugList.appendChild(div);
     });
 
   } catch (error) {
-    alert("Failed to analyze code. Is backend running?");
     console.error(error);
+    alert("Backend not reachable");
   }
-}
-
+});
